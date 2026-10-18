@@ -1,0 +1,11 @@
+{
+  "name": "msgate-agents",
+  "description": "msgate-agents: ready-made agent types (second opinion, code review, cross-check, expert persona, delegation, ad hoc) that the msgate engine plugin answers with Codex, plus the dispatch skill.",
+  "author": {
+    "name": "Diego (Azul) Ferreira"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/JustAzul/msgate-agents",
+  "repository": "https://github.com/JustAzul/msgate-agents",
+  "types": "./types/index.d.ts"
+}
