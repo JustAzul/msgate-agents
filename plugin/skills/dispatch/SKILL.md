@@ -43,6 +43,8 @@ workspace-write`.
 
 Load only the reference for the chosen purpose. A user override always wins
 (`--effort xhigh`, `--model <id>`, `--sandbox read-only`); say which override ran.
+Through an agent type, an effort override is the Agent call's `effort` (see
+below).
 
 ## Agent types, engine tools or CLI
 
@@ -62,6 +64,11 @@ carries the output (cut at 64 KiB) ending in
   tell the user to install the engine, and use the CLI if it is on the PATH.
 - `msgate-agents:code-review` takes the review target as its whole prompt:
   `uncommitted`, `base <branch>` or `commit <sha>`.
+- An `effort` in the Agent call replaces the profile's effort for that agent,
+  its follow-ups included, with the engine 1.2.0 or later. Set it only when the
+  user asks for an effort. These types run Codex, so pass `low`, `medium`,
+  `high` or `xhigh`: Codex has no `max`, and a run asked for `max` fails. An
+  older engine ignores the field and runs the profile's effort.
 - A follow-up is a SendMessage to the agent; it continues the same
   conversation. If the agent answers that its conversation is no longer
   recorded, continue with the `run` tool and the conversation id from the
@@ -72,8 +79,8 @@ carries the output (cut at 64 KiB) ending in
   opinion.
 
 The engine also gives two tools, for what the agent types do not carry (a
-model, effort or sandbox other than the profile's, another provider). By
-contract:
+model or sandbox other than the profile's, another provider, or an effort with
+an engine before 1.2.0). By contract:
 
 - `mcp__msgate__run`: `prompt` required; optional `conversation_id`, `purpose`,
   `provider`, `model`, `effort`, `sandbox`, `cwd`. Without `conversation_id` it
