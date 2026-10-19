@@ -13,8 +13,8 @@ function messageOf(error) {
 async function openRunRows($, version) {
   if (!hasRunRows(version)) return false
   try {
-    await $.msgate.backType(runBackArgs())
-    await $.agent.register(runSpec())
+    await $.msgate.backType(runBackArgs(version))
+    await $.agent.register(runSpec(version))
     return true
   } catch (error) {
     $.ui.log('msgate-agents: the hidden run type is not available: ' + messageOf(error), { to: 'debug' })

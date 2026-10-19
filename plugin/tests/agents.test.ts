@@ -364,3 +364,193 @@ test('a write to the record of tried runs that loses to another write is redone 
   expect(w.spawns.map((s) => s.prompt)).toEqual(['msgate run run-a'])
   expect(w.tried.value).toEqual(['run-b', 'run-a'])
 })
+
+const PROGRESS = 'mcp__msgate__progress'
+
+for (const version of ['1.4.0', '1.9.2']) {
+  test('an engine at ' + version + ' gets the progress tool in every type and a stepped declaration, the hidden run type included', async ($, on) => {
+    const w = world(on, present(version))
+    await $.session.start(START)
+
+    const answered = w.agentTypes.filter((t) => t.name !== 'run')
+    expect(answered).toHaveLength(6)
+    for (const spec of answered) expect(spec.tools).toEqual(['Read', PROGRESS])
+    expect(runRegistered(w)[0].tools).toEqual([PROGRESS])
+    expect(w.backCalls).toHaveLength(7)
+    for (const call of w.backCalls) expect(call.stepped).toBe(true)
+    expect(runBacked(w)).toEqual([{ type: 'run', command: 'follow', promptMode: 'run-id', stepped: true }])
+  })
+}
+
+test('an engine of 1.3 declares no steps and lists no progress tool', async ($, on) => {
+  const w = world(on, present('1.3.9'))
+  await $.session.start(START)
+
+  for (const spec of w.agentTypes.filter((t) => t.name !== 'run')) expect(spec.tools).toEqual(['Read'])
+  expect(runRegistered(w)[0].tools).toEqual([])
+  for (const call of w.backCalls) expect('stepped' in call).toBe(false)
+})
+
+const CATALOG = {
+  provider: 'codex',
+  models: [
+    ...['gpt-5.6-terra', 'gpt-5.6-sol', 'gpt-6-sol', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna'].map((id) => ({ id, name: id, visibility: 'list' })),
+    { id: 'gpt-reserve', name: 'r', visibility: 'hide' },
+    { id: 'codex-auto-review', name: 'c', visibility: 'hide' },
+    { id: 'gpt-6-hidden', name: 'h', visibility: 'hide' },
+  ],
+}
+const VARIANTS = ['adhoc-gpt-6-1-sol', 'adhoc-gpt-6-astra', 'adhoc-gpt-6-luna', 'second-opinion-gpt-6-astra']
+const variantsOf = (names: string[]) => names.filter((name) => !TYPES.includes(name) && name !== 'run').sort()
+
+test('the engine catalog adds a variant of second-opinion and adhoc per model, each registered and backed with its base profile and its model', async ($, on) => {
+  const w = world(on, present('1.4.0'))
+  w.catalog = async () => CATALOG
+  await $.session.start(START)
+
+  expect(variantsOf(w.agentTypes.map((t) => t.name))).toEqual(VARIANTS)
+  expect(variantsOf(w.backCalls.map((c) => c.type))).toEqual(VARIANTS)
+  const byType = Object.fromEntries(w.backCalls.map((c) => [c.type, c]))
+  expect(byType['second-opinion-gpt-6-astra']).toEqual({
+    type: 'second-opinion-gpt-6-astra', command: 'exec', promptMode: 'free', model: 'gpt-6-astra', effort: 'high', sandbox: 'read-only', purpose: 'second-opinion', stepped: true,
+  })
+  expect(byType['adhoc-gpt-6-1-sol']).toEqual({
+    type: 'adhoc-gpt-6-1-sol', command: 'exec', promptMode: 'free', model: 'gpt-6.1-sol', sandbox: 'read-only', purpose: 'adhoc', stepped: true,
+  })
+  const spec = w.agentTypes.find((t) => t.name === 'second-opinion-gpt-6-astra')
+  expect(spec.description).toContain('Codex judges a decision, plan or design already drafted.')
+  expect(spec.description).toContain('gpt-6-astra')
+  expect(spec.description).toContain('Use only when the user asks')
+  expect(spec.tools).toEqual(['Read', PROGRESS])
+  expect(spec.background).toBe(true)
+  expect(spec.model).toBe('haiku')
+  expect(spec.prompt).toContain(HANDOFF_FAILED)
+})
+
+const SIX_AND_RUN = 7
+const variantLogs = (w: any) => w.debugLogs.filter((line: string) => line.includes('model variants'))
+
+const BAD_CATALOGS: Record<string, () => Promise<unknown>> = {
+  'refused': async () => {
+    throw new Error('msgate:models:failed')
+  },
+  'of a wrong shape': async () => ({ models: 'gpt-6-astra' }),
+  'empty': async () => undefined,
+}
+
+for (const [label, answer] of Object.entries(BAD_CATALOGS)) {
+  test('a catalog ' + label + ' leaves the six types and the run type, one debug line and no toast', async ($, on) => {
+    const w = world(on, present('1.4.0'))
+    w.catalog = answer
+    await $.session.start(START)
+
+    expect(w.backCalls).toHaveLength(SIX_AND_RUN)
+    expect(variantsOf(w.agentTypes.map((t) => t.name))).toEqual([])
+    expect(variantLogs(w)).toHaveLength(1)
+    expect(w.toasts).toEqual([])
+  })
+}
+
+test('an engine at 1.4 whose interface has no models function leaves the six types, one debug line and no toast', async ($, on) => {
+  const w = world(on, present('1.4.0', [], false))
+  await $.session.start(START)
+
+  expect(w.backCalls).toHaveLength(SIX_AND_RUN)
+  expect(variantLogs(w)).toHaveLength(1)
+  expect(w.toasts).toEqual([])
+})
+
+for (const version of ['1.3.9', '2.0.0']) {
+  test('an engine at ' + version + ' is not asked for a catalog and gets no variant', async ($, on) => {
+    const w = world(on, present(version))
+    w.catalog = async () => CATALOG
+    await $.session.start(START)
+
+    expect(w.modelsCalls).toBe(0)
+    expect(variantsOf(w.agentTypes.map((t) => t.name))).toEqual([])
+    expect(variantLogs(w)).toEqual([])
+  })
+}
+
+test('the engine version is read before any type is registered, and the catalog only after the six types and the run type are backed', async ($, on) => {
+  let registeredAtVersion = -1
+  let backedAtCatalog = -1
+  let registeredAtCatalog = -1
+  const w: any = world(on, present(async () => {
+    registeredAtVersion = w.agentTypes.length
+    return '1.4.0'
+  }))
+  w.catalog = async () => {
+    backedAtCatalog = w.backCalls.length
+    registeredAtCatalog = w.agentTypes.length
+    return CATALOG
+  }
+  await $.session.start(START)
+
+  expect(registeredAtVersion).toBe(0)
+  expect(backedAtCatalog).toBe(SIX_AND_RUN)
+  expect(registeredAtCatalog).toBe(SIX_AND_RUN)
+})
+
+test('a variant is offered only after the dispatch skill loads, and an unknown agent of the plugin follows next', async ($, on) => {
+  const w = world(on, present('1.4.0'))
+  w.catalog = async () => CATALOG
+  await $.session.start(START)
+
+  expect(await offer($, 'msgate-agents:adhoc-gpt-6-astra')).toEqual({ isOffered: false })
+  await loadDispatch($)
+  for (const name of VARIANTS) expect(await offer($, 'msgate-agents:' + name)).toEqual({ isOffered: true })
+  expect(await offer($, 'msgate-agents:adhoc-gpt-9-nothing')).toEqual({ isOffered: true })
+})
+
+test('a variant the engine refuses to back is logged and never offered, and the other types are offered', async ($, on) => {
+  const w = world(on, present('1.4.0', ['adhoc-gpt-6-astra']))
+  w.catalog = async () => CATALOG
+  await $.session.start(START)
+  await loadDispatch($)
+
+  expect(await offer($, 'msgate-agents:adhoc-gpt-6-astra')).toEqual({ isOffered: false })
+  expect(await offer($, 'msgate-agents:adhoc-gpt-6-luna')).toEqual({ isOffered: true })
+  expect(await offer($, 'msgate-agents:adhoc')).toEqual({ isOffered: true })
+  expect(w.debugLogs.filter((line) => line.includes('adhoc-gpt-6-astra') && line.includes('msgate:backType:model'))).toHaveLength(1)
+})
+
+test('every session start asks for the catalog again, and variants registered earlier stay hidden when the catalog is gone', async ($, on) => {
+  const w = world(on, present('1.4.0'))
+  w.catalog = async () => CATALOG
+  await $.session.start(START)
+  await loadDispatch($)
+  expect(await offer($, 'msgate-agents:adhoc-gpt-6-astra')).toEqual({ isOffered: true })
+
+  w.catalog = async () => {
+    throw new Error('msgate:models:failed')
+  }
+  await $.session.start(START)
+
+  expect(w.modelsCalls).toBe(2)
+  expect(await offer($, 'msgate-agents:adhoc-gpt-6-astra')).toEqual({ isOffered: false })
+  expect(await offer($, 'msgate-agents:adhoc')).toEqual({ isOffered: true })
+})
+
+test('a variant the engine backed keeps being recognized after a reload that finds a different catalog', async ($, on) => {
+  const w = world(on, present('1.4.0'))
+  w.catalog = async () => CATALOG
+  await $.session.start(START)
+  await loadDispatch($)
+  w.catalog = async () => ({ provider: 'codex', models: [{ id: 'gpt-6-astra', name: 'a', visibility: 'list' }] })
+  await $.session.start(START)
+
+  expect(await offer($, 'msgate-agents:adhoc-gpt-6-astra')).toEqual({ isOffered: true })
+  expect(await offer($, 'msgate-agents:adhoc-gpt-6-luna')).toEqual({ isOffered: false })
+})
+
+test('when the record of variants is not a list, an agent of the plugin is hidden and an agent of another is not', async ($, on) => {
+  const w = world(on, present('1.4.0'))
+  w.catalog = async () => CATALOG
+  await $.session.start(START)
+  await loadDispatch($)
+  w.corruptKey = 'variants'
+
+  expect(await offer($, 'msgate-agents:adhoc-gpt-6-astra')).toEqual({ isOffered: false })
+  expect(await offer($, 'Explore')).toEqual({ isOffered: true })
+})

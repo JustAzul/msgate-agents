@@ -55,23 +55,78 @@ export function agentTypeNames() {
   return Object.keys(TYPES)
 }
 
-// agentSpecs is what the mod registers. The model and tool list matter only if
-// the engine does not answer: the cheapest model and one read-only tool.
-export function agentSpecs() {
-  return agentTypeNames().map((name) => ({
+// baseModelOf is the model a type is written for, or undefined when it runs on
+// the provider's default.
+export function baseModelOf(name) {
+  return TYPES[name].profile.model
+}
+
+// The tool a stepped row ends each step with. The host refuses a call to a tool
+// missing from the agent's list, so the list and the `stepped` declaration go
+// together.
+export const PROGRESS_TOOL = 'mcp__msgate__progress'
+
+// The first engine minor that follows a run in steps, and the first that lists
+// the provider's models.
+const STEPS_ENGINE_MINOR = 4
+const MODELS_ENGINE_MINOR = 4
+
+function atLeastMinor(version, minor) {
+  const [major, found] = String(version).split('.').map(Number)
+  return major === 1 && found >= minor
+}
+
+// hasSteps tells whether an engine of this version runs a stepped row.
+export function hasSteps(version) {
+  return atLeastMinor(version, STEPS_ENGINE_MINOR)
+}
+
+// hasModels tells whether an engine of this version answers `models()`.
+export function hasModels(version) {
+  return atLeastMinor(version, MODELS_ENGINE_MINOR)
+}
+
+// A variant is `{ base, name, model, purpose }` (see models.js): a type that runs
+// as its base does, on another model. It states the base as its purpose, never
+// its own name, so the statistics and the time estimate stay with the base.
+function describedWith(base, model) {
+  return TYPES[base].description + ' Runs on the model ' + model + '.'
+}
+
+function specOf(name, description, version) {
+  return {
     name,
-    description: TYPES[name].description + SHARED_NOTE,
+    description: description + SHARED_NOTE,
     prompt: FALLTHROUGH_PROMPT,
     model: 'haiku',
-    tools: ['Read'],
+    tools: hasSteps(version) ? ['Read', PROGRESS_TOOL] : ['Read'],
     omitClaudeMd: true,
     background: true,
-  }))
+  }
+}
+
+// agentSpecs is what the mod registers. The model and tool list matter only if
+// the engine does not answer: the cheapest model and one read-only tool, and
+// the progress tool when the engine runs steps.
+export function agentSpecs(version) {
+  return agentTypeNames().map((name) => specOf(name, TYPES[name].description, version))
+}
+
+export function variantSpecs(version, variants) {
+  return variants.map((variant) => specOf(variant.name, describedWith(variant.base, variant.model), version))
+}
+
+function steppedFor(version) {
+  return hasSteps(version) ? { stepped: true } : {}
 }
 
 // backArgs is the `backType` call that hands a type's profile to the engine.
-export function backArgs(name) {
-  return { type: name, ...TYPES[name].profile }
+export function backArgs(name, version) {
+  return { type: name, ...TYPES[name].profile, ...steppedFor(version) }
+}
+
+export function variantBackArgs(variant, version) {
+  return { type: variant.name, ...TYPES[variant.base].profile, model: variant.model, purpose: variant.base, ...steppedFor(version) }
 }
 
 // The hidden type that stands for a run in the agent list. It is offered to no
@@ -85,23 +140,22 @@ const RUN_ENGINE_MINOR = 1
 
 // hasRunRows tells whether an engine of this version can serve the hidden type.
 export function hasRunRows(version) {
-  const [major, minor] = String(version).split('.').map(Number)
-  return major === 1 && minor >= RUN_ENGINE_MINOR
+  return atLeastMinor(version, RUN_ENGINE_MINOR)
 }
 
-export function runSpec() {
+export function runSpec(version) {
   return {
     name: RUN_TYPE,
     description: 'A row for a run in flight. Offered to no model.',
     prompt: 'This row is answered by the msgate engine. Reply with nothing.',
     model: 'haiku',
-    tools: [],
+    tools: hasSteps(version) ? [PROGRESS_TOOL] : [],
     omitClaudeMd: true,
   }
 }
 
-export function runBackArgs() {
-  return { type: RUN_TYPE, ...RUN_PROFILE }
+export function runBackArgs(version) {
+  return { type: RUN_TYPE, ...RUN_PROFILE, ...steppedFor(version) }
 }
 
 // isRunType tells whether a full type ("<plugin>:<name>") is this plugin's hidden one.
@@ -110,10 +164,10 @@ export function isRunType(pluginName, fullType) {
 }
 
 // typeOf returns the type name for a full type ("<plugin>:<name>") this plugin
-// registered, or null.
-export function typeOf(pluginName, fullType) {
+// registered, or null. variantNames are the variants registered so far.
+export function typeOf(pluginName, fullType, variantNames = []) {
   const prefix = pluginName + ':'
   if (typeof fullType !== 'string' || !fullType.startsWith(prefix)) return null
   const name = fullType.slice(prefix.length)
-  return agentTypeNames().includes(name) ? name : null
+  return agentTypeNames().includes(name) || variantNames.includes(name) ? name : null
 }

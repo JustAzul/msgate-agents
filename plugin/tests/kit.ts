@@ -3,16 +3,18 @@
 // memory.
 import { mock } from 'claude-code/testing'
 
-export type BackCall = { type: string; command: string; promptMode: string; model?: string; effort?: string; sandbox?: string }
+export type BackCall = { type: string; command: string; promptMode: string; model?: string; effort?: string; sandbox?: string; purpose?: string; stepped?: boolean }
 
 // How the fake engine behaves: present with a version, absent altogether, or
-// refusing the `backType` of the listed types.
-export type Engine = { kind: 'absent' } | { kind: 'present'; version: string | (() => Promise<string>); refuse?: string[] }
+// refusing the `backType` of the listed types. `hasModels: false` leaves the
+// `models` function out of the interface, as an engine before 1.4 does.
+export type Engine = { kind: 'absent' } | { kind: 'present'; version: string | (() => Promise<string>); refuse?: string[]; hasModels?: boolean }
 
-export const present = (version = '1.0.0', refuse: string[] = []): Engine => ({ kind: 'present', version, refuse })
+export const present = (version = '1.0.0', refuse: string[] = [], hasModels = true): Engine => ({ kind: 'present', version, refuse, hasModels })
 export const absent: Engine = { kind: 'absent' }
 
 export type FlaggedRun = { run_id: string; purpose: string; source: string; started_at: string }
+export type Catalog = { provider: string; models: { id: string; name: string; visibility: string }[] }
 export type SpawnArgs = { subagentType: string; prompt: string; description: string }
 
 export const RUN_TYPE = 'msgate-agents:run'
@@ -30,6 +32,11 @@ export function world(on: any, engine: Engine = present()) {
     backCalls: [] as BackCall[],
     versionCalls: 0,
     skillTexts: [] as string[],
+    // What the engine answers to `models()`; a test sets it.
+    modelsCalls: 0,
+    catalog: (async () => ({ provider: 'codex', models: [] })) as () => Promise<Catalog | unknown>,
+    // A state key whose value reads back as something no one wrote, while a test sets it.
+    corruptKey: null as string | null,
     // The runs the engine reports as flagged, and what each spawn answers; a test sets them.
     flaggedCalls: 0,
     flaggedRuns: (async () => []) as () => Promise<FlaggedRun[]>,
@@ -53,6 +60,14 @@ export function world(on: any, engine: Engine = present()) {
           w.flaggedCalls += 1
           return w.flaggedRuns()
         },
+        ...(engine.hasModels === false
+          ? {}
+          : {
+              models: async () => {
+                w.modelsCalls += 1
+                return w.catalog()
+              },
+            }),
         backType: async (args: BackCall) => {
           w.backCalls.push(args)
           if (engine.refuse?.includes(args.type)) throw new Error('msgate:backType:model')
@@ -73,7 +88,10 @@ export function world(on: any, engine: Engine = present()) {
     w.agentTypes.push(e)
     return { value: { agent: 'msgate-agents:' + e.name } }
   })
-  on('state.get', (_$: any, e: any, next: any) => (e.key === 'triedRuns' ? { value: { value: w.tried.value, version: w.tried.version } } : next(e)))
+  on('state.get', (_$: any, e: any, next: any) => {
+    if (e.key === w.corruptKey) return { value: { value: 42, version: 1 } }
+    return e.key === 'triedRuns' ? { value: { value: w.tried.value, version: w.tried.version } } : next(e)
+  })
   on('state.set', (_$: any, e: any, next: any) => {
     if (e.key !== 'triedRuns') return next(e)
     if (w.rivalTriedWrite !== null) {

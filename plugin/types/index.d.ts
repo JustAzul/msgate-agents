@@ -1,7 +1,7 @@
 // The msgate-agents plugin's contract: the values it keeps in the session's
-// $.state. The engine interface it calls, `$.msgate` (`version()`, `backType()`
-// and, from engine 1.1, `flaggedRuns()`), is added by the msgate engine plugin,
-// not by this one, and is undefined when that plugin is not installed.
+// $.state. The engine interface it calls, `$.msgate` (`version()`, `backType()`,
+// from engine 1.1 `flaggedRuns()` and from engine 1.4 `models()`), is added by
+// the msgate engine plugin, not by this one, and is undefined when that plugin is not installed.
 
 declare module 'claude-code' {
   interface PluginState {
@@ -12,6 +12,10 @@ declare module 'claude-code' {
       // The agent types the engine backed at this session's start: only these
       // are offered. Empty when the engine is missing or of another major.
       backedTypes: string[]
+      // The names of the model variants registered in this session, kept across
+      // a reload of the plugin so each is still recognized as the plugin's own,
+      // gate included. Only grows: the host keeps a registered type.
+      variants: string[]
       // The session was already told the engine is missing, so a reload of the
       // plugin does not say it again.
       engineNoticeShown: boolean
