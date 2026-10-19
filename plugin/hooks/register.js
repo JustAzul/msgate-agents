@@ -72,6 +72,9 @@ async function registerAgentTypes($, version) {
 // leaves the session with the types it has.
 async function catalogVariants($) {
   try {
+    // `$.msgate.models` appears only as a call: the host's loader rejects it
+    // used as a value (a `typeof` test) and drops the whole module. A missing
+    // function is a TypeError and takes the same path as any catalog failure.
     return modelVariants(await $.msgate.models())
   } catch (error) {
     $.ui.log('msgate-agents: no model variants this session: ' + messageOf(error), { to: 'debug' })

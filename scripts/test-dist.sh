@@ -29,6 +29,7 @@ must_exist .claude-plugin/plugin.json
 must_exist hooks/hooks.json
 must_exist hooks/register.js
 must_exist hooks/agents.js
+must_exist hooks/models.js
 must_exist skills/dispatch/SKILL.md
 must_exist LICENSE
 must_exist README.md
