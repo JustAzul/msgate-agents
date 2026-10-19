@@ -34,7 +34,7 @@ Each case names the requirement it checks (FRn of the msgate split PRD). "mod" m
 - [ ] **Backed row answered (FR33, FR35, mod):** type `msgate-agents:second-opinion` backed; Claude's Agent call with prompt `q` → argv `exec --background --json --purpose second-opinion --source agent --settings-source profile --model gpt-6.1-sol --effort high --sandbox read-only --session-id <s> -`, stdin `q`; no model step.
 - [ ] **Review row (FR35, mod):** type `msgate-agents:code-review` backed with `command: review`; prompt `base main` → argv `review --base main …`; prompt `uncommitted` → `--uncommitted`.
 - [ ] **Answer in auto mode (FR37, mod):** the run ends `ok` with output `pong` → the step ends with a `SubagentHandback` call whose message is `pong` plus the trailer `[msgate run … · conversation … · ok]`.
-- [ ] **Agent types registered and backed (FR39, FR40, mod):** session start with a fake `$.msgate` → six `agent.register` calls and six `backType` calls with the profiles of FR40 (adhoc with no model or effort, sandbox read-only).
+- [ ] **Agent types registered and backed (FR39, FR40, mod):** session start with a fake `$.msgate` → six `agent.register` calls and six `backType` calls (engine below 1.4, or a catalog with no model to add) with the profiles of FR40 (adhoc with no model or effort, sandbox read-only).
 - [ ] **Offer gate (FR42, mod):** engine present; before the dispatch skill loads → `msgate-agents:delegation` not offered; after → offered.
 - [ ] **Report (FR44, CLI):** a terminal `ok` run of purpose `code-review` with `model_used` `gpt-6.1-sol` → `msgate result <run> --report` prints `## msgate report · code-review · gpt-6.1-sol · ok`, the output, the trailer and `Full output: <path>`; the same with the output path as argument.
 - [ ] **Hook delivery, clean (FR46, hook):** a post-commit review whose output equals the clean sentinel → the hook exits 2 with the report on stderr saying the review is clean.
@@ -60,7 +60,7 @@ Each case names the requirement it checks (FRn of the msgate split PRD). "mod" m
 - [ ] **Rollback documented (FR55):** before cutover step 1 → the rollback steps are written where the cutover is run: uninstall both plugins, rename the home back, the local marketplace manifest sourcing `agentcli` from `JustAzul/msgate-agents` at ref `v0.6.3`, the consumer revert; the local manifest is tried once against a scratch Claude Code config directory and installs agentcli 0.6.3.
 - [ ] **Cutover preconditions (FR53):** before step 1 → agentcli 0.6.3 is the installed version; releases `v1.0.0` and `v0.7.0` exist; the consumer test suites pass against the 1.0.0 binary; `agentcli status` across the home lists no non-terminal run; `agentcli stats --all --json` and `agentcli runs --all` are saved.
 - [ ] **Mods notes (FR52):** the owner's mods notes → every path they cite exists in `cc-msgate`.
-- [ ] **Phase 3 proof (FR59, real):** in the default and bypass modes → a hidden row ends its turn once, Claude receives nothing from it, and the hook's delivery arrives once; in the auto mode → the spawn is refused, no row opens, Claude receives nothing, and the hook's delivery arrives once; the result is recorded before phase 3 ships.
+- [ ] **Phase 3 proof (FR59, real):** in the default and bypass modes → a hidden row ends its turn once, Claude receives nothing from it, and the hook's delivery arrives once; in the auto mode → the row opens, Claude receives nothing, and the hook's delivery arrives once; with `MSGATE_ROW_MODE=auto` → the spawn is refused, no row opens, Claude receives nothing, and the hook's delivery arrives once; the result is recorded before phase 3 ships.
 - [ ] **Hidden row (FR56–FR58, phase 3, real):** a hook starts a flagged run → the agents plugin's timer opens one `msgate-agents:run` row within 5 seconds; the row streams progress; the run leaves the band; the row ends with `msgate run <id> ended ok` in plain text.
 
 ---
@@ -94,7 +94,7 @@ Each case names the requirement it checks (FRn of the msgate split PRD). "mod" m
 - [ ] **Failure once per state, Stop (FR46, hook):** a Stop review fails with dirty hash H → delivered once; the next Stop with hash H delivers nothing; a changed hash H2 runs again.
 - [ ] **Hooks pass the session (FR45, hook):** every hook exec argv holds `--session-id <id>` and the environment holds `MSGATE_AGENT_FEEDBACK=1`.
 - [ ] **Hidden row from another spawner (FR58, phase 3, mod):** a `msgate-agents:run` row whose spawn origin is not `msgate-agents`, or whose prompt names a run of another session → not answered by the engine; the step passes through.
-- [ ] **Hidden row in the auto mode (FR58, phase 3, mod):** the `agent.spawn` of a `msgate-agents:run` row from `msgate-agents` with `permissionMode` `auto` → the engine's hook returns `{ deny }`; no row opens; the run stays in the band. The same spawn in the default or bypass mode passes through.
+- [ ] **Hidden row in the auto mode (FR58, phase 3, mod):** the `agent.spawn` of a `msgate-agents:run` row from `msgate-agents` with `permissionMode` `auto` → the row opens, the same as in the default or bypass mode. With `MSGATE_ROW_MODE=auto` in the environment the engine's hook returns `{ deny }`; no row opens; the run stays in the band; any other value of the variable refuses nothing.
 - [ ] **Stopped hidden row (FR58, phase 3, real):** TaskStop on a hidden row → the row disappears; the run keeps running and does not return to the band.
 
 ---
@@ -121,9 +121,11 @@ Each case names the requirement it checks (FRn of the msgate split PRD). "mod" m
 - [ ] **Step limit (FR38, mod):** a row's turn reaches its ninth step → the step goes to the model beneath the plugin (`next(e)`); one debug-log line for the turn.
 - [ ] **Engine missing (FR41, mod):** `$.msgate` undefined at session start → one toast `msgate-agents needs the msgate engine plugin 1.x`, one debug-log line, no `backType` call, and `agent.offer` hides all six types even after the dispatch skill loads.
 - [ ] **backType refused for one type (FR41, mod):** the fake engine refuses `delegation` → that type is hidden and logged; the other five are offered after the skill loads.
+- [ ] **Model types (mod):** engine 1.4.0 and a catalog listing `gpt-5.6-terra`, `gpt-5.6-sol`, `gpt-6-sol`, `gpt-6.1-sol`, `gpt-6-astra` and `gpt-6-luna`, with three hidden models → `second-opinion-gpt-6-astra`, `adhoc-gpt-6-1-sol`, `adhoc-gpt-6-astra` and `adhoc-gpt-6-luna` are registered and backed; the first is backed with its base's profile, `model: gpt-6-astra` and `purpose: second-opinion`. A catalog the engine cannot answer → only the six types, one debug-log line, no toast; an engine below 1.4 is not asked for a catalog and gets no variant.
+- [ ] **Steps declared (mod):** engine 1.4.0 or 1.9.2 → every type, the hidden `run` type included, is backed with `stepped: true` and lists `mcp__msgate__progress` among its tools; engine 1.3.x → no `stepped`, no progress tool.
 - [ ] **Report of a running run (FR44, CLI):** `msgate result <running run> --report` → exit 5.
 - [ ] **Report of an unknown run (FR44, CLI):** an unknown id or a path outside any run directory → exit 4.
-- [ ] **Hidden row spawn fails (FR57, phase 3, mod):** `$.agent.spawn` resolves `{ deny }` (no Agent tool, or the engine's refusal in the auto mode) → one debug-log line for that run; the run stays in the band, and the timer does not spawn it again.
+- [ ] **Hidden row spawn fails (FR57, phase 3, mod):** `$.agent.spawn` resolves `{ deny }` (no Agent tool, or the engine's refusal with `MSGATE_ROW_MODE=auto`) → one debug-log line for that run; the run stays in the band, and the timer does not spawn it again.
 
 ---
 
@@ -133,7 +135,7 @@ Each case names the requirement it checks (FRn of the msgate split PRD). "mod" m
 - [ ] **Migration re-run (FR14, CLI):** a second command after a successful migration → finds the new home and does nothing to the old path.
 - [ ] **Concurrent migration (FR14, CLI):** two commands start at once against an unmigrated home → one moves it under the lock; the other waits, finds the new home and proceeds.
 - [ ] **link re-run (FR11, CLI):** `msgate link` twice with the same install → the launcher is unchanged the second time.
-- [ ] **backType on every session start (FR40, mod):** a reload of the agents plugin → six `backType` calls again; the engine's state holds six types, not twelve.
+- [ ] **backType on every session start (FR40, mod):** a reload of the agents plugin → six `backType` calls again (engine below 1.4, or a catalog with no model to add); the engine's state holds six types, not twelve.
 - [ ] **Engine reload keeps backed types (FR29, mod):** the engine's module loads again in the same session → a row of a backed type is still answered without a new `backType` call.
 - [ ] **Queue across reload (FR1, mod):** the engine reloads with two pending entries → both are delivered after the reload.
 - [ ] **Cutover step re-run (FR54, real):** step 3 run twice → the install command reports the plugins already installed; nothing duplicated.

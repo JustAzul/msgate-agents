@@ -50,6 +50,17 @@ when the session starts. Restart Claude Code after installing. The engine needs
 the provider CLI on `PATH` and logged in (`codex` for the Codex provider); see
 its README.
 
+Which engine version unlocks what:
+
+| Engine | What the plugin does with it |
+|---|---|
+| 1.0 | the six agent types, and the band alone for flagged runs |
+| 1.1 or later | also the [hidden run row](#the-hidden-run-row) |
+| 1.4 or later | also the [model types](#the-six-agents) and, for every type and for the hidden run row, [steps](#the-hidden-run-row) |
+
+With an engine below 1.4 the plugin works as it did before: no model types and
+no steps.
+
 ### Update
 
 ```sh
@@ -57,7 +68,9 @@ claude plugin marketplace update msgate-agents
 claude plugin update msgate-agents@msgate-agents
 ```
 
-Restart Claude Code to load the new version.
+Restart Claude Code to load the new version. The engine updates the same way
+(`claude plugin update msgate@cc-msgate`); this plugin's model types and steps
+need its version 1.4 or later.
 
 ## The six agents
 
@@ -79,6 +92,28 @@ The types are offered to Claude only once the dispatch skill has loaded in the
 session, and only when the engine was found. Each description says the type is
 used only when the user asks for another agent.
 
+With an engine from 1.4 on, the plugin asks it for the provider's model catalog
+at session start and adds a type for some of the models of `second-opinion` and
+`adhoc`, named `second-opinion-<model>` and `adhoc-<model>`; the table above
+keeps its six rows. A type is added for a model when:
+
+- its id is `gpt-<major>[.<minor>]-<family>` with a major of 6 or more;
+- it is the newest version of its family among the models the provider does not
+  hide (visibility `hide`);
+- it is not the model the base type already runs, and, for `second-opinion`, its
+  family is not `luna`.
+
+The name is the base, a hyphen and the model id in lower case, with every
+character other than a letter, a digit or `-` turned into `-`: a catalog that
+lists `gpt-6-astra` adds `msgate-agents:second-opinion-gpt-6-astra` and
+`msgate-agents:adhoc-gpt-6-astra`. A variant runs as its base does, with the
+same effort and sandbox, on its model, and records its runs under the base's
+purpose, so the statistics and the time estimate stay with the base. Its
+description is the base's, plus `Runs on the model <id>.`. The list follows the
+catalog of the session: when the engine cannot answer it, only the six types
+exist and the reason goes to the debug log. Variants are offered under the same
+rules as the six.
+
 If the engine fails to answer a request, the type's fallback (a Haiku model
 with only the `Read` tool) answers `msgate: the hand-off to the agent failed, so
 this is not its answer.`, so a failed hand-off never passes for the other
@@ -89,25 +124,43 @@ agent's opinion.
 At session start the plugin asks the engine for its version. When the engine is
 not installed, refuses the call, or is not version 1.x, the session shows one
 notice, `msgate-agents needs the msgate engine plugin 1.x` (followed by the
-version found, if any), and none of the six types is offered. When the engine
-refuses the profile of one type, that type alone is hidden and the refusal goes
-to the debug log.
+version found, if any), and no agent type is offered. When the engine refuses
+the profile of one type, that type alone is hidden and the refusal goes to the
+debug log.
 
 ## The hidden run row
 
-With a msgate engine from 1.1 on, the plugin also registers a seventh type,
-`msgate-agents:run`. It is not one of the six agents and Claude never picks it:
-it is offered to no model, whether or not the dispatch skill has loaded. It
-exists only so that a run started outside an agent (from the command line, say)
-and flagged for agent feedback can show as a row in the agent list. The engine
-answers that row with the run's progress and its outcome.
+With a msgate engine from 1.1 on, the plugin also registers a hidden type,
+`msgate-agents:run`. It is not one of the agents above and Claude never picks
+it: it is offered to no model, whether or not the dispatch skill has loaded. It
+exists only so that a run started outside an agent and flagged for agent
+feedback can show as a row in the agent list: a run a hook or the command line
+started with `--agent-feedback`, and, with an engine from 1.4 on, a job started
+with the engine's `mcp__msgate__run` tool. The engine answers that row with the
+run's progress and its outcome.
 
 Every 5 seconds the plugin asks the engine for the flagged runs that have no row
 yet and opens one row per run, with the prompt `msgate run <run_id>` and the
-description `<purpose> · <source>`. A run is tried once per session: when the
-engine refuses the row (it does not open one in the auto permission mode) or the
-call fails, the reason goes to the debug log, one line for that run, and the run
-is not tried again. A run with no row keeps showing in the band above the prompt.
+description `<purpose> · <source>`. The engine, not this plugin, then rewrites
+that prompt to the run id, a blank line and the whole prompt of the run, so the
+agent list and the transcript of the row show what the run was asked; see
+[Hidden rows](https://github.com/JustAzul/cc-msgate#hidden-rows) in the
+engine's README for its limits.
+
+The row opens in every permission mode, `auto` included. The engine refuses it
+only when the environment variable `MSGATE_ROW_MODE` is set to `auto`; the run
+then stays in the band. A run is
+tried once per session: when the engine refuses the row or the call fails, the
+reason goes to the debug log, one line for that run, and the run is not tried
+again. A run with no row keeps showing in the band above the prompt.
+
+With an engine from 1.4 on, the plugin declares the hidden type, like the others,
+as stepped and lists the engine's `mcp__msgate__progress` tool among its tools.
+The engine then follows the run in steps: each step covers a window of entries
+(the engine's `liveSummaryEvery` setting) and ends with that window's label as
+text, which stays in the row's history instead of being drawn only while the run
+works. A row falls back to one step when summaries are off or the session has no
+screen (`claude -p`); the engine's README describes the rules.
 
 With an engine at 1.0.x the type is not registered, the plugin starts no timer
 and the band alone shows the runs.
@@ -117,8 +170,11 @@ and the band alone shows the runs.
 `msgate-agents:dispatch` teaches Claude to pick the right agent, to write a
 prompt that carries its own context, to continue a conversation, to read a
 result, and to report another agent's findings with attribution and open
-disagreement instead of applying its patches. It also covers the engine's
-`run` and `jobs` tools and the `msgate` command line, with the explicit
+disagreement instead of applying its patches. It prefers an agent type, a model
+type included, to the engine's `run` tool, and keeps the tool for what a type
+does not carry: a `sandbox` other than the type's, a `cwd`, a `provider` other
+than Codex, or the `conversation_id` of a conversation no agent type holds. It
+also covers the `jobs` tool and the `msgate` command line, with the explicit
 `--model`, `--effort` and `--sandbox` each purpose needs, since the command line
 applies no profile.
 
