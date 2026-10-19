@@ -19,10 +19,11 @@ msgate exec --purpose cross-check --model gpt-6.1-sol --effort high --sandbox re
 PROMPT
 ```
 
-Agent type: `msgate-agents:cross-check`. Engine tool: `mcp__msgate__run` with
-`purpose: "cross-check"`, `model: "gpt-6.1-sol"`, `effort: "high"`,
-`sandbox: "read-only"` and `cwd` set to the repository, so the file reads
-resolve.
+Agent type: `msgate-agents:cross-check`. Use `mcp__msgate__run` only for what
+the type does not carry, as SKILL.md says, such as files outside the directory
+the type runs in; then pass `purpose: "cross-check"`, `model: "gpt-6.1-sol"`,
+`effort: "high"`, `sandbox: "read-only"` and `cwd` set to the repository, so the
+file reads resolve.
 
 ## Prompt template
 
@@ -65,4 +66,5 @@ Report findings ordered by severity with file:line. Skip style.
 - Pasting whole files into the prompt: the reviewer reads paths itself, and
   pasting costs input tokens and skews attention.
 - Cross-checking code a delegation just produced on the same model: same blind
-  spots. Pass a different `--model`, or let Claude check it.
+  spots. Pass a different `--model` (the CLI or the `run` tool: `cross-check` has
+no model types), or let Claude check it.

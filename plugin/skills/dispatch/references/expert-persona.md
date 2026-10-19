@@ -28,9 +28,9 @@ msgate exec --purpose expert-persona --model gpt-6.1-sol --effort xhigh --sandbo
 PROMPT
 ```
 
-Agent type: `msgate-agents:expert-persona`. Engine tool: `mcp__msgate__run` with
-`purpose: "expert-persona"`, `model: "gpt-6.1-sol"`, `effort: "xhigh"` and
-`sandbox: "read-only"`.
+Agent type: `msgate-agents:expert-persona`. Use `mcp__msgate__run` only for what
+the type does not carry, as SKILL.md says; then pass `purpose: "expert-persona"`,
+`model: "gpt-6.1-sol"`, `effort: "xhigh"` and `sandbox: "read-only"`.
 
 ## Prompt template
 

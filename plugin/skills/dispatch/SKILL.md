@@ -43,25 +43,43 @@ workspace-write`.
 
 Load only the reference for the chosen purpose. A user override always wins
 (`--effort xhigh`, `--model <id>`, `--sandbox read-only`); say which override ran.
-Through an agent type, an effort override is the Agent call's `effort` (see
-below).
+Through an agent type, an effort override is the Agent call's `effort` and a
+model override is the type of that model (see below).
 
 ## Agent types, engine tools or CLI
 
 With both plugins installed, dispatch through the **agent types**, one per
 purpose: `msgate-agents:second-opinion`, `msgate-agents:code-review`,
 `msgate-agents:cross-check`, `msgate-agents:expert-persona`,
-`msgate-agents:delegation` and `msgate-agents:adhoc`. Call the Agent tool with
-`subagent_type` set to one, a short `description` and the self-contained
-`prompt`. Each runs its profile as an engine job and shows as a native
+`msgate-agents:delegation` and `msgate-agents:adhoc`, and, for a model the
+user asks for, the model types below. Call the Agent tool with `subagent_type`
+set to one, a short `description` and the self-contained `prompt`. Each runs its profile as an engine job and shows as a native
 background agent: its row streams what the agent is doing, and its report
 carries the output (cut at 64 KiB) ending in
 `[msgate run <run_id> · conversation <conversation_id> · <outcome>]`.
 
-- The types are offered only once this skill has loaded in the session, and only
-  when the msgate engine plugin (1.x) is installed. When the session showed the
+- The types, the model types included, are offered only once this skill has
+  loaded in the session, and only when the msgate engine plugin (1.x) is
+  installed. When the session showed the
   notice `msgate-agents needs the msgate engine plugin 1.x`, no type is offered:
   tell the user to install the engine, and use the CLI if it is on the PATH.
+- With the engine 1.4.0 or later, the provider's model catalog adds types of
+  its own: `second-opinion-<model>` and `adhoc-<model>`, where `<model>` is the
+  model id with every character other than a letter, a digit or `-` turned
+  into `-` (`gpt-6.1-sol` becomes `gpt-6-1-sol`). Each runs as its base does,
+  with the same effort and sandbox, on that model, and its runs count under the
+  base's purpose. Today they are `msgate-agents:second-opinion-gpt-6-astra`,
+  `msgate-agents:adhoc-gpt-6-1-sol`, `msgate-agents:adhoc-gpt-6-astra` and
+  `msgate-agents:adhoc-gpt-6-luna`, but the list follows the provider's catalog
+  and changes with it: only gpt-6 or later, only the newest version of each
+  family, no model the provider hides, no `luna` for `second-opinion`, and not
+  the model a base already runs. Take the names from the types the session
+  offers, not from this list. Before the engine 1.4.0, or when the catalog
+  cannot be read, only the six types exist.
+- When the user asks for a model that exists as a type, call the Agent tool with
+  that type. A model with no type, and a model for `code-review`, `cross-check`,
+  `expert-persona` or `delegation`, which have no model types, goes through the
+  CLI or the `run` tool with `--model`.
 - `msgate-agents:code-review` takes the review target as its whole prompt:
   `uncommitted`, `base <branch>` or `commit <sha>`.
 - An `effort` in the Agent call replaces the profile's effort for that agent,
@@ -78,9 +96,15 @@ carries the output (cut at 64 KiB) ending in
   the other agent's answer: report it as a failed dispatch, never as its
   opinion.
 
-The engine also gives two tools, for what the agent types do not carry (a
-model or sandbox other than the profile's, another provider, or an effort with
-an engine before 1.2.0). By contract:
+The engine also gives two tools. Prefer the agent type over `mcp__msgate__run`
+whenever one covers the request, a model the user named included: a type shows
+as a native agent with its report, follow-ups and stop. Use the tool for what a
+type does not carry: a `sandbox` other than the type's profile, a `cwd`, a
+`provider` other than Codex, the `conversation_id` of a conversation no agent
+type holds, or an effort with an engine before 1.2.0. A run started with the
+tool also shows as an agent row while it works (with the engine 1.4.0 or later
+and this plugin loaded), and its result still arrives as the notice below. By
+contract:
 
 - `mcp__msgate__run`: `prompt` required; optional `conversation_id`, `purpose`,
   `provider`, `model`, `effort`, `sandbox`, `cwd`. Without `conversation_id` it

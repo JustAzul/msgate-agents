@@ -52,7 +52,8 @@ Stop and report back. Do not improvise; do not expand scope.
 PROMPT
 ```
 
-Agent type: `msgate-agents:delegation`. Engine tool: `mcp__msgate__run` with
+Agent type: `msgate-agents:delegation`. Use `mcp__msgate__run` only for what the
+type does not carry, as SKILL.md says, such as another directory; then pass
 `purpose: "delegation"`, `model: "gpt-6.1-sol"`, `effort: "medium"`,
 `sandbox: "workspace-write"` and `cwd`. A job running
 far past its peers means the task was not mechanical: cancel it
