@@ -3,6 +3,7 @@ name: ci
 on:
   push:
   pull_request:
+  workflow_call:
 
 # The PII scan is the engine's tool, pinned to a commit of the engine's main
 # branch: the engine's release tags name its dist builds, which hold no Go
