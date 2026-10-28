@@ -5,8 +5,9 @@
 #
 #   scripts/build-dist.sh <outdir>
 #
-# The version is read from the VERSION file for the closing line only; the
-# plugin manifest carries none.
+# The version in the dist manifest is the content of the VERSION file: the source
+# manifest carries none, and an installed copy updates only when this version
+# changes.
 set -eu
 
 die() {
@@ -14,9 +15,13 @@ die() {
   exit 2
 }
 
+command -v jq >/dev/null 2>&1 || die "jq is not on PATH"
 [ $# -eq 1 ] || die "usage: build-dist.sh <outdir>"
 root=$(cd "$(dirname "$0")/.." && pwd -P)
 cd "$root"
+
+version=$(cat VERSION)
+[ -n "$version" ] || die "VERSION is empty"
 
 out=$1
 if [ -e "$out" ]; then
@@ -26,9 +31,10 @@ fi
 mkdir -p "$out"
 out=$(cd "$out" && pwd -P)
 
-version=$(cat VERSION)
-
 cp -R plugin/. "$out/"
+manifest=$out/.claude-plugin/plugin.json
+jq --arg v "$version" '. + {version: $v}' "$manifest" >"$manifest.tmp" || die "cannot write the version into the manifest"
+mv "$manifest.tmp" "$manifest"
 # The mod tests, the type declarations (the plugin's own contract and the ones
 # Claude Code generates beside the mod) and tsconfig.json are development
 # files; they are not part of the shipped plugin.

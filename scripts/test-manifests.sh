@@ -3,7 +3,7 @@
 # reads none. The plugin manifest must declare no `dependencies` (the plugin
 # finds the msgate engine at use, and an update to a version that adds a
 # dependency leaves an existing install unloaded until someone installs the
-# dependency by hand) and no `version` (the version comes from VERSION).
+# dependency by hand) and no `version` (the dist build writes it from VERSION).
 #
 # usage: scripts/test-manifests.sh [repo-root]
 set -u
