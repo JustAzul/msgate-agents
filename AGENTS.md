@@ -6,10 +6,18 @@
 the release step refuses anything else.
 
 Every push to `main` publishes a new build of the plugin on the `dist` branch,
-which is what `claude plugin update` installs. The GitHub release and the
-`v<version>` tag are created only for the first build of a version, so a change
-pushed without a version bump reaches users under the previous version number
-and appears in no release.
+which is what users install. The build writes the content of `VERSION` as the
+`version` of the dist `.claude-plugin/plugin.json`; the source manifest carries
+none. The GitHub release and the `v<version>` tag are created only for the first
+build of a version, so a change pushed without a version bump appears in no
+release.
+
+An installed copy updates only when that `version` changes, and each version is
+cached under `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`. Dist
+builds between two releases therefore reach no installed copy until the next
+`chore: release`. After a release, users run
+`claude plugin marketplace update <marketplace>`, then
+`claude plugin update msgate-agents@<marketplace>`, then `/reload-plugins`.
 
 Every change to the plugin therefore bumps `VERSION` in the same
 push, as Semantic Versioning defines it, with the public API being the
