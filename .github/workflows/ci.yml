@@ -29,6 +29,8 @@ jobs:
         run: scripts/test-skill.sh
       - name: Dist tree
         run: scripts/test-dist.sh
+      - name: Release scripts
+        run: scripts/test-release.sh
       - name: PII scan of tracked files
         run: go run "$PIISCAN" --tracked .
       - name: Build dist tree
