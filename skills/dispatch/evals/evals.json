@@ -1,0 +1,22 @@
+[
+  {"query": "pergunta pro codex o que ele acha dessa arquitetura", "should_trigger": true},
+  {"query": "ask codex to review this diff before I merge", "should_trigger": true},
+  {"query": "manda pro codex fazer esse refactor chato", "should_trigger": true},
+  {"query": "o que o codex acha da minha abordagem de cache aqui?", "should_trigger": true},
+  {"query": "get a second opinion from GPT on this design decision", "should_trigger": true},
+  {"query": "codex review my uncommitted changes", "should_trigger": true},
+  {"query": "act as a senior Go engineer and review this gateway code — use codex", "should_trigger": true},
+  {"query": "start that refactor as a msgate background job and tell me when it's done", "should_trigger": true},
+  {"query": "send a follow-up to the codex conversation from earlier: which of those risks is cheapest to fix?", "should_trigger": true},
+  {"query": "what's the status of my msgate jobs? read the result of the one that finished", "should_trigger": true},
+  {"query": "ask codex with the gpt-6-astra model for a second opinion on this schema", "should_trigger": true},
+  {"query": "pergunta pro codex usando o gpt-6.1-sol qual o risco desse plano de migração", "should_trigger": true},
+  {"query": "write this function for me", "should_trigger": false},
+  {"query": "what do you think about this approach?", "should_trigger": false},
+  {"query": "review this PR for code quality issues", "should_trigger": false},
+  {"query": "what could go wrong with this plan?", "should_trigger": false},
+  {"query": "run the test suite in the background and tell me when it finishes", "should_trigger": false},
+  {"query": "what's the status of the deploy on ECS?", "should_trigger": false},
+  {"query": "compare gpt-6 and claude pricing for my API budget", "should_trigger": false},
+  {"query": "troca o modelo do meu agente de resumos para haiku no settings", "should_trigger": false}
+]
