@@ -194,9 +194,9 @@ The plugin is JavaScript and a skill. There is no binary, no Go and no
 container to build.
 
 ```sh
-make test           # mod tests (claude plugin test), manifests, dist tree
+make test           # mod tests (claude plugin test), manifests, dist tree, release scripts
 make verify-plugin  # loads the plugin in a model-free claude -p
-make dist           # builds the tree CI publishes to the dist branch, in dist/
+make dist           # builds the tree CI publishes to the dist branch on a release, in dist/
 ```
 
 `make test` needs `claude` and `jq` on the PATH. Run `make test` and `make
