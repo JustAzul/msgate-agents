@@ -34,11 +34,11 @@ workspace-write`.
 
 | Purpose | Use when | Model / effort / sandbox | Detail |
 |---|---|---|---|
-| `second-opinion` | judge a decision, plan or design already drafted; "segunda opinião" | gpt-6.1-sol / high / read-only | `references/second-opinion.md` |
-| `code-review` | independent pass on a diff: uncommitted, vs a base, one commit | gpt-6.1-sol / high / read-only | `references/code-review.md` |
-| `cross-check` | sanity pass on finished code, named by files; "what did I miss" | gpt-6.1-sol / high / read-only | `references/cross-check.md` |
-| `expert-persona` | judgment question framed as a senior practitioner; "como um sênior de X" | gpt-6.1-sol / xhigh / read-only | `references/expert-persona.md` |
-| `delegation` | well-scoped mechanical work; the only purpose that writes | gpt-6.1-sol / medium / workspace-write | `references/delegation.md` |
+| `second-opinion` | judge a decision, plan or design already drafted; "segunda opinião" | gpt-6.2-sol / high / read-only | `references/second-opinion.md` |
+| `code-review` | independent pass on a diff: uncommitted, vs a base, one commit | gpt-6.2-sol / high / read-only | `references/code-review.md` |
+| `cross-check` | sanity pass on finished code, named by files; "what did I miss" | gpt-6.2-sol / high / read-only | `references/cross-check.md` |
+| `expert-persona` | judgment question framed as a senior practitioner; "como um sênior de X" | gpt-6.2-sol / xhigh / read-only | `references/expert-persona.md` |
+| `delegation` | well-scoped mechanical work; the only purpose that writes | gpt-6.2-sol / medium / workspace-write | `references/delegation.md` |
 | `adhoc` | anything else | provider defaults / read-only | none |
 
 Load only the reference for the chosen purpose. A user override always wins
@@ -66,10 +66,11 @@ carries the output (cut at 64 KiB) ending in
 - With the engine 1.4.0 or later, the provider's model catalog adds types of
   its own: `second-opinion-<model>` and `adhoc-<model>`, where `<model>` is the
   model id with every character other than a letter, a digit or `-` turned
-  into `-` (`gpt-6.1-sol` becomes `gpt-6-1-sol`). Each runs as its base does,
+  into `-` (`gpt-6.2-astra` becomes `gpt-6-2-astra`). Each runs as its base does,
   with the same effort and sandbox, on that model, and its runs count under the
-  base's purpose. Today they are `msgate-agents:second-opinion-gpt-6-astra`,
-  `msgate-agents:adhoc-gpt-6-1-sol`, `msgate-agents:adhoc-gpt-6-astra` and
+  base's purpose. Today they are `msgate-agents:second-opinion-gpt-6-2-astra`,
+  `msgate-agents:second-opinion-gpt-6-1-terra`, `msgate-agents:adhoc-gpt-6-2-sol`,
+  `msgate-agents:adhoc-gpt-6-2-astra`, `msgate-agents:adhoc-gpt-6-1-terra` and
   `msgate-agents:adhoc-gpt-6-luna`, but the list follows the provider's catalog
   and changes with it: only gpt-6 or later, only the newest version of each
   family, no model the provider hides, no `luna` for `second-opinion`, and not
@@ -139,7 +140,7 @@ profile, so every command below names `--model`, `--effort` and `--sandbox`.
 the call that started it):
 
 ```bash
-msgate exec --purpose second-opinion --model gpt-6.1-sol --effort high --sandbox read-only --background --json - <<'PROMPT'
+msgate exec --purpose second-opinion --model gpt-6.2-sol --effort high --sandbox read-only --background --json - <<'PROMPT'
 ...the self-contained prompt...
 PROMPT
 # {"conversation_id": "c-...", "run_id": "r-...", "state": "running", ...}
@@ -156,11 +157,11 @@ The flags for each purpose:
 
 | Purpose | Command and flags |
 |---|---|
-| `second-opinion` | `msgate exec --purpose second-opinion --model gpt-6.1-sol --effort high --sandbox read-only` |
-| `code-review` | `msgate review --purpose code-review --model gpt-6.1-sol --effort high --sandbox read-only` plus one target |
-| `cross-check` | `msgate exec --purpose cross-check --model gpt-6.1-sol --effort high --sandbox read-only` |
-| `expert-persona` | `msgate exec --purpose expert-persona --model gpt-6.1-sol --effort xhigh --sandbox read-only` |
-| `delegation` | `msgate exec --purpose delegation --model gpt-6.1-sol --effort medium --sandbox workspace-write` |
+| `second-opinion` | `msgate exec --purpose second-opinion --model gpt-6.2-sol --effort high --sandbox read-only` |
+| `code-review` | `msgate review --purpose code-review --model gpt-6.2-sol --effort high --sandbox read-only` plus one target |
+| `cross-check` | `msgate exec --purpose cross-check --model gpt-6.2-sol --effort high --sandbox read-only` |
+| `expert-persona` | `msgate exec --purpose expert-persona --model gpt-6.2-sol --effort xhigh --sandbox read-only` |
+| `delegation` | `msgate exec --purpose delegation --model gpt-6.2-sol --effort medium --sandbox workspace-write` |
 | `adhoc` | `msgate exec --purpose adhoc --sandbox read-only` (model and effort are the provider's defaults) |
 
 **Foreground** when blocking is fine (short prompt, nothing else to do). The last
@@ -168,13 +169,13 @@ stdout line is the output path: `Read` it. Set `--timeout <seconds>`, because th
 run lives and dies with the shell call holding it:
 
 ```bash
-msgate exec --purpose cross-check --model gpt-6.1-sol --effort high --sandbox read-only --timeout 110 - <<'PROMPT'
+msgate exec --purpose cross-check --model gpt-6.2-sol --effort high --sandbox read-only --timeout 110 - <<'PROMPT'
 ...
 PROMPT
 ```
 
 Review takes a target and no prompt: `msgate review --purpose code-review
---model gpt-6.1-sol --effort high --sandbox read-only --uncommitted`, `--base
+--model gpt-6.2-sol --effort high --sandbox read-only --uncommitted`, `--base
 <branch>` or `--commit <sha>`. It takes `--background` the same way.
 
 Exit codes, flags and diagnosing a failed run: `references/cli.md`.

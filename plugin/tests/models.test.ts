@@ -29,18 +29,20 @@ test('a hidden model gets no variant and does not shadow an older listed model o
   expect(adhocNames(modelVariants(catalog(models)))).toEqual(['adhoc-gpt-6-astra'])
 })
 
-test('the acceptance catalog yields second-opinion for gpt-6-astra and adhoc for the newest of each family, and nothing for the rest', () => {
+test('the acceptance catalog yields second-opinion for the newest astra and terra and adhoc for the newest of each family, and nothing for the rest', () => {
   const models = [
-    ...listed('gpt-5.6-terra', 'gpt-5.6-sol', 'gpt-6-sol', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna'),
+    ...listed('gpt-6.2-sol', 'gpt-6.2-astra', 'gpt-6.1-terra', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'),
     { id: 'gpt-reserve', name: 'r', visibility: 'hide' },
     { id: 'codex-auto-review', name: 'c', visibility: 'hide' },
     { id: 'gpt-6-hidden', name: 'h', visibility: 'hide' },
   ]
 
   expect(namesOf(modelVariants(catalog(models)))).toEqual([
-    'second-opinion-gpt-6-astra',
-    'adhoc-gpt-6-1-sol',
-    'adhoc-gpt-6-astra',
+    'second-opinion-gpt-6-2-astra',
+    'second-opinion-gpt-6-1-terra',
+    'adhoc-gpt-6-2-sol',
+    'adhoc-gpt-6-2-astra',
+    'adhoc-gpt-6-1-terra',
     'adhoc-gpt-6-luna',
   ])
 })

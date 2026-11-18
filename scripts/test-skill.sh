@@ -23,15 +23,15 @@ for t in second-opinion code-review cross-check expert-persona delegation adhoc;
 done
 has "SKILL.md names the run tool" 'mcp__msgate__run'
 has "SKILL.md names the jobs tool" 'mcp__msgate__jobs'
-has "SKILL.md shows explicit --model" '--model gpt-6.1-sol'
+has "SKILL.md shows explicit --model" '--model gpt-6.2-sol'
 has "SKILL.md shows explicit --effort" '--effort xhigh'
 has "SKILL.md shows explicit --sandbox" '--sandbox workspace-write'
 has "SKILL.md covers cost awareness" 'msgate stats'
 
 # The model types the catalog adds, and why the run tool stays: for what a type
 # does not carry.
-has "SKILL.md names a model type of second-opinion" 'msgate-agents:second-opinion-gpt-6-astra'
-has "SKILL.md names a model type of adhoc" 'msgate-agents:adhoc-gpt-6-1-sol'
+has "SKILL.md names a model type of second-opinion" 'msgate-agents:second-opinion-gpt-6-2-astra'
+has "SKILL.md names a model type of adhoc" 'msgate-agents:adhoc-gpt-6-2-sol'
 has "SKILL.md says the model types need engine 1.4.0" 'engine 1.4.0 or later'
 has "SKILL.md says the model types follow the provider's catalog" "the provider's catalog"
 has "SKILL.md prefers the agent type over the run tool" 'Prefer the agent type'

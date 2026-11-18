@@ -23,14 +23,14 @@ answer snaps back to generic.
 ## Dispatch
 
 ```bash
-msgate exec --purpose expert-persona --model gpt-6.1-sol --effort xhigh --sandbox read-only --background --json - <<'PROMPT'
+msgate exec --purpose expert-persona --model gpt-6.2-sol --effort xhigh --sandbox read-only --background --json - <<'PROMPT'
 ...template below...
 PROMPT
 ```
 
 Agent type: `msgate-agents:expert-persona`. Use `mcp__msgate__run` only for what
 the type does not carry, as SKILL.md says; then pass `purpose: "expert-persona"`,
-`model: "gpt-6.1-sol"`, `effort: "xhigh"` and `sandbox: "read-only"`.
+`model: "gpt-6.2-sol"`, `effort: "xhigh"` and `sandbox: "read-only"`.
 
 ## Prompt template
 

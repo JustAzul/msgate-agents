@@ -16,9 +16,9 @@ Pick the target from git state:
 ## Dispatch
 
 ```bash
-msgate review --purpose code-review --model gpt-6.1-sol --effort high --sandbox read-only --uncommitted --background --json
-msgate review --purpose code-review --model gpt-6.1-sol --effort high --sandbox read-only --base master --background --json
-msgate review --purpose code-review --model gpt-6.1-sol --effort high --sandbox read-only --commit <sha> --background --json
+msgate review --purpose code-review --model gpt-6.2-sol --effort high --sandbox read-only --uncommitted --background --json
+msgate review --purpose code-review --model gpt-6.2-sol --effort high --sandbox read-only --base master --background --json
+msgate review --purpose code-review --model gpt-6.2-sol --effort high --sandbox read-only --commit <sha> --background --json
 ```
 
 Then `wait` and `result` as in SKILL.md. With the plugin loaded, the

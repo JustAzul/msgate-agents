@@ -14,14 +14,14 @@ state. If the user has a diff in mind, use code-review instead.
 ## Dispatch
 
 ```bash
-msgate exec --purpose cross-check --model gpt-6.1-sol --effort high --sandbox read-only --cwd <repo-root> --background --json - <<'PROMPT'
+msgate exec --purpose cross-check --model gpt-6.2-sol --effort high --sandbox read-only --cwd <repo-root> --background --json - <<'PROMPT'
 ...template below...
 PROMPT
 ```
 
 Agent type: `msgate-agents:cross-check`. Use `mcp__msgate__run` only for what
 the type does not carry, as SKILL.md says, such as files outside the directory
-the type runs in; then pass `purpose: "cross-check"`, `model: "gpt-6.1-sol"`,
+the type runs in; then pass `purpose: "cross-check"`, `model: "gpt-6.2-sol"`,
 `effort: "high"`, `sandbox: "read-only"` and `cwd` set to the repository, so the
 file reads resolve.
 

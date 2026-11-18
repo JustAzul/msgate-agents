@@ -81,11 +81,11 @@ start.
 
 | Type | Use when | Model | Effort | Sandbox |
 |---|---|---|---|---|
-| `second-opinion` | judge a decision, plan or design already drafted | gpt-6.1-sol | high | read-only |
-| `code-review` | an independent review of a diff; the prompt is the target: `uncommitted`, `base <branch>` or `commit <sha>` | gpt-6.1-sol | high | read-only |
-| `cross-check` | look over finished code, named by file, for what was missed | gpt-6.1-sol | high | read-only |
-| `expert-persona` | a judgment question answered as a senior practitioner of a field | gpt-6.1-sol | xhigh | read-only |
-| `delegation` | well-scoped mechanical work; the only type that writes files | gpt-6.1-sol | medium | workspace-write |
+| `second-opinion` | judge a decision, plan or design already drafted | gpt-6.2-sol | high | read-only |
+| `code-review` | an independent review of a diff; the prompt is the target: `uncommitted`, `base <branch>` or `commit <sha>` | gpt-6.2-sol | high | read-only |
+| `cross-check` | look over finished code, named by file, for what was missed | gpt-6.2-sol | high | read-only |
+| `expert-persona` | a judgment question answered as a senior practitioner of a field | gpt-6.2-sol | xhigh | read-only |
+| `delegation` | well-scoped mechanical work; the only type that writes files | gpt-6.2-sol | medium | workspace-write |
 | `adhoc` | anything else | provider default | provider default | read-only |
 
 The types are offered to Claude only once the dispatch skill has loaded in the

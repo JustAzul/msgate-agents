@@ -11,7 +11,7 @@ const SHARED_NOTE =
   ' The prompt must stand on its own: the agent sees nothing of this session.' +
   ' Use only when the user asks for Codex, GPT or another agent; never choose it on your own.'
 
-const MODEL = 'gpt-6.1-sol'
+const MODEL = 'gpt-6.2-sol'
 
 // description: what the model reads when it picks a type. profile: what the
 // engine runs the type with; a setting left out is the provider's default.

@@ -6,7 +6,7 @@ has already drafted or analyzed. Its output is a critique, not code.
 ## Dispatch
 
 ```bash
-msgate exec --purpose second-opinion --model gpt-6.1-sol --effort high --sandbox read-only --background --json - <<'PROMPT'
+msgate exec --purpose second-opinion --model gpt-6.2-sol --effort high --sandbox read-only --background --json - <<'PROMPT'
 ...template below...
 PROMPT
 ```
@@ -14,7 +14,7 @@ PROMPT
 Agent type: `msgate-agents:second-opinion`, or `msgate-agents:second-opinion-<model>`
 when the user asks for a model that has a type (SKILL.md lists them). Use
 `mcp__msgate__run` only for what the type does not carry, as SKILL.md says; then
-pass `purpose: "second-opinion"`, `model: "gpt-6.1-sol"`, `effort: "high"`,
+pass `purpose: "second-opinion"`, `model: "gpt-6.2-sol"`, `effort: "high"`,
 `sandbox: "read-only"` and the same prompt.
 
 ## Prompt template

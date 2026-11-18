@@ -31,7 +31,7 @@ projects. While the job runs it may be writing to the tree, so make no
 conflicting edits in the same repository until it finishes.
 
 ```bash
-msgate exec --purpose delegation --model gpt-6.1-sol --effort medium --sandbox workspace-write --cwd "$REPO_ROOT" --background --json - <<'PROMPT'
+msgate exec --purpose delegation --model gpt-6.2-sol --effort medium --sandbox workspace-write --cwd "$REPO_ROOT" --background --json - <<'PROMPT'
 ## Task
 [crisp description]
 
@@ -54,7 +54,7 @@ PROMPT
 
 Agent type: `msgate-agents:delegation`. Use `mcp__msgate__run` only for what the
 type does not carry, as SKILL.md says, such as another directory; then pass
-`purpose: "delegation"`, `model: "gpt-6.1-sol"`, `effort: "medium"`,
+`purpose: "delegation"`, `model: "gpt-6.2-sol"`, `effort: "medium"`,
 `sandbox: "workspace-write"` and `cwd`. A job running
 far past its peers means the task was not mechanical: cancel it
 (`mcp__msgate__jobs` with `action: "cancel"`, or `msgate cancel <run_id>`)

@@ -17,11 +17,11 @@ test('session start registers the six agent types and backs each with its profil
 
   const byType = Object.fromEntries(w.backCalls.map((c) => [c.type, c]))
   expect(w.backCalls).toHaveLength(6)
-  expect(byType['second-opinion']).toEqual({ type: 'second-opinion', command: 'exec', promptMode: 'free', model: 'gpt-6.1-sol', effort: 'high', sandbox: 'read-only' })
-  expect(byType['code-review']).toEqual({ type: 'code-review', command: 'review', promptMode: 'review-target', model: 'gpt-6.1-sol', effort: 'high', sandbox: 'read-only' })
-  expect(byType['cross-check']).toEqual({ type: 'cross-check', command: 'exec', promptMode: 'free', model: 'gpt-6.1-sol', effort: 'high', sandbox: 'read-only' })
-  expect(byType['expert-persona']).toEqual({ type: 'expert-persona', command: 'exec', promptMode: 'free', model: 'gpt-6.1-sol', effort: 'xhigh', sandbox: 'read-only' })
-  expect(byType['delegation']).toEqual({ type: 'delegation', command: 'exec', promptMode: 'free', model: 'gpt-6.1-sol', effort: 'medium', sandbox: 'workspace-write' })
+  expect(byType['second-opinion']).toEqual({ type: 'second-opinion', command: 'exec', promptMode: 'free', model: 'gpt-6.2-sol', effort: 'high', sandbox: 'read-only' })
+  expect(byType['code-review']).toEqual({ type: 'code-review', command: 'review', promptMode: 'review-target', model: 'gpt-6.2-sol', effort: 'high', sandbox: 'read-only' })
+  expect(byType['cross-check']).toEqual({ type: 'cross-check', command: 'exec', promptMode: 'free', model: 'gpt-6.2-sol', effort: 'high', sandbox: 'read-only' })
+  expect(byType['expert-persona']).toEqual({ type: 'expert-persona', command: 'exec', promptMode: 'free', model: 'gpt-6.2-sol', effort: 'xhigh', sandbox: 'read-only' })
+  expect(byType['delegation']).toEqual({ type: 'delegation', command: 'exec', promptMode: 'free', model: 'gpt-6.2-sol', effort: 'medium', sandbox: 'workspace-write' })
   // adhoc leaves model and effort to the provider's defaults.
   expect(byType['adhoc']).toEqual({ type: 'adhoc', command: 'exec', promptMode: 'free', sandbox: 'read-only' })
 })
@@ -394,13 +394,13 @@ test('an engine of 1.3 declares no steps and lists no progress tool', async ($, 
 const CATALOG = {
   provider: 'codex',
   models: [
-    ...['gpt-5.6-terra', 'gpt-5.6-sol', 'gpt-6-sol', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna'].map((id) => ({ id, name: id, visibility: 'list' })),
+    ...['gpt-5.6-terra', 'gpt-5.6-sol', 'gpt-6-sol', 'gpt-6.1-sol', 'gpt-6.2-sol', 'gpt-6.1-terra', 'gpt-6-astra', 'gpt-6-luna'].map((id) => ({ id, name: id, visibility: 'list' })),
     { id: 'gpt-reserve', name: 'r', visibility: 'hide' },
     { id: 'codex-auto-review', name: 'c', visibility: 'hide' },
     { id: 'gpt-6-hidden', name: 'h', visibility: 'hide' },
   ],
 }
-const VARIANTS = ['adhoc-gpt-6-1-sol', 'adhoc-gpt-6-astra', 'adhoc-gpt-6-luna', 'second-opinion-gpt-6-astra']
+const VARIANTS = ['adhoc-gpt-6-1-terra', 'adhoc-gpt-6-2-sol', 'adhoc-gpt-6-astra', 'adhoc-gpt-6-luna', 'second-opinion-gpt-6-1-terra', 'second-opinion-gpt-6-astra']
 const variantsOf = (names: string[]) => names.filter((name) => !TYPES.includes(name) && name !== 'run').sort()
 
 test('the engine catalog adds a variant of second-opinion and adhoc per model, each registered and backed with its base profile and its model', async ($, on) => {
@@ -414,8 +414,8 @@ test('the engine catalog adds a variant of second-opinion and adhoc per model, e
   expect(byType['second-opinion-gpt-6-astra']).toEqual({
     type: 'second-opinion-gpt-6-astra', command: 'exec', promptMode: 'free', model: 'gpt-6-astra', effort: 'high', sandbox: 'read-only', purpose: 'second-opinion', stepped: true,
   })
-  expect(byType['adhoc-gpt-6-1-sol']).toEqual({
-    type: 'adhoc-gpt-6-1-sol', command: 'exec', promptMode: 'free', model: 'gpt-6.1-sol', sandbox: 'read-only', purpose: 'adhoc', stepped: true,
+  expect(byType['adhoc-gpt-6-1-terra']).toEqual({
+    type: 'adhoc-gpt-6-1-terra', command: 'exec', promptMode: 'free', model: 'gpt-6.1-terra', sandbox: 'read-only', purpose: 'adhoc', stepped: true,
   })
   const spec = w.agentTypes.find((t) => t.name === 'second-opinion-gpt-6-astra')
   expect(spec.description).toContain('Codex judges a decision, plan or design already drafted.')
